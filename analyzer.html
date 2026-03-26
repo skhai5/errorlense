@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyzer — ErrorLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --off-white: #f7f6f3;
+  --light: #eeecea;
+  --border: #e2e0db;
+  --border-dark: #ccc9c3;
+  --text: #1a1916;
+  --text-mid: #5a5752;
+  --text-muted: #9a9690;
+  --accent-light: #f0ede8;
+  --red: #c0392b;
+  --red-bg: #fdf2f1;
+  --orange: #c75b1a;
+  --orange-bg: #fdf4ee;
+  --yellow: #9a7a0a;
+  --yellow-bg: #fdfaee;
+  --green: #1a7a4a;
+  --green-bg: #f0faf4;
+  --blue: #1a5fa0;
+  --blue-bg: #f0f6fd;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --radius: 12px;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--white);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── APP LAYOUT ── */
+.app-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--off-white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sidebar-logo-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--text);
+  border-radius: 50%;
+}
+
+.sidebar-back {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.sidebar-back:hover { color: var(--text); }
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.sidebar-section { padding-top: 16px; }
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar-icon-btn {
+  background: none;
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+  padding: 0;
+  font-family: var(--sans);
+}
+.sidebar-icon-btn:hover { border-color: var(--text); color: var(--text); }
+
+.new-project-form {
+  padding: 4px 8px 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.new-project-input {
+  flex: 1;
+  padding: 5px 10px;
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+}
+.new-project-input:focus { border-color: var(--text); }
+
+/* ── PROJECT ITEMS ── */
+.project-row { margin: 0 8px 2px; }
+
+.project-header-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 7px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text);
+  border-radius: 6px;
+  transition: background 0.15s;
+  text-align: left;
+}
+.project-header-btn:hover { background: var(--light); }
+.project-header-btn.drop-over {
+  background: var(--accent-light);
+  outline: 1px dashed var(--border-dark);
+  outline-offset: -1px;
+}
+
+.project-arrow {
+  font-size: 9px;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+.project-arrow.open { transform: rotate(90deg); }
+
+.project-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.project-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--light);
+  border-radius: 10px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+}
+
+.project-children { display: none; padding-left: 8px; }
+.project-children.open { display: block; }
+
+/* ── HISTORY ITEMS ── */
+.history-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 0 8px 2px;
+  transition: background 0.15s;
+  user-select: none;
+}
+.history-item:hover { background: var(--light); }
+.history-item.active { background: var(--border); }
+.history-item.dragging { opacity: 0.4; }
+
+.history-item-input {
+  font-size: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hist-sev {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 100px;
+}
+
+.hist-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sidebar-empty {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── SEVERITY ── */
+.sev-critical { background: var(--red-bg);    color: var(--red); }
+.sev-high     { background: var(--orange-bg); color: var(--orange); }
+.sev-medium   { background: var(--yellow-bg); color: var(--yellow); }
+.sev-low      { background: var(--green-bg);  color: var(--green); }
+.sev-info     { background: var(--blue-bg);   color: var(--blue); }
+
+/* ── MAIN CONTENT ── */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 48px;
+  background: var(--white);
+}
+
+.analyzer-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.analyzer-header { margin-bottom: 36px; }
+
+.analyzer-title {
+  font-family: var(--serif);
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.analyzer-sub {
+  font-size: 15px;
+  color: var(--text-mid);
+  font-weight: 300;
+}
+
+/* ── CATEGORY PILLS ── */
+.cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cat-pill {
+  padding: 6px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border-dark);
+  background: var(--white);
+  color: var(--text-mid);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-pill:hover { border-color: var(--text); color: var(--text); }
+.cat-pill.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--white);
+}
+
+/* ── INPUT ── */
+.input-wrap {
+  background: var(--white);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-wrap:focus-within {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px rgba(26,25,22,0.06);
+}
+
+.input-topbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-topbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+.d-red    { background: #ff5f57; }
+.d-yellow { background: #febc2e; }
+.d-green  { background: #28c840; }
+
+.input-topbar-label {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: 'DM Sans', monospace;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+}
+textarea::placeholder { color: var(--text-muted); }
+
+.examples-row {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.ex-label { font-size: 11px; color: var(--text-muted); }
+
+.ex-chip {
+  padding: 3px 10px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ex-chip:hover { border-color: var(--border-dark); color: var(--text); }
+
+.analyze-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--text);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.01em;
+}
+.analyze-btn:hover { opacity: 0.85; }
+.analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── LOADING ── */
+.loading {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.loading.show { display: flex; }
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-dark);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESULT CARD ── */
+.result {
+  display: none;
+  background: var(--white);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 20px;
+  animation: rise 0.25s ease;
+}
+.result.show { display: block; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+}
+
+.result-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--text);
+}
+
+.result-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-source {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sev-badge {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.result-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.result-block { display: flex; flex-direction: column; gap: 8px; }
+.result-block.full { grid-column: 1 / -1; }
+
+.block-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.block-content {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.cause-box {
+  background: var(--off-white);
+  border-left: 3px solid var(--border-dark);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.steps-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  font-weight: 300;
+}
+.step-n {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--off-white);
+  border: 1px solid var(--border-dark);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.refs-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.ref-tag {
+  padding: 4px 10px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.raw-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.raw-toggle:hover { color: var(--text); }
+
+.raw-pre {
+  display: none;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--off-white);
+}
+.raw-pre.show { display: block; }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  html, body { overflow: auto; }
+  .app-layout { flex-direction: column; height: auto; }
+  .sidebar { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); }
+  .sidebar-scroll { max-height: 240px; }
+  .main-content { padding: 24px; overflow: visible; }
+  .result-body { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a class="sidebar-logo" href="/">
+        <div class="sidebar-logo-dot"></div>
+        ErrorLens
+      </a>
+      <a class="sidebar-back" href="/">← Home</a>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <!-- Projects -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span>Projects</span>
+          <button class="sidebar-icon-btn" title="New project" onclick="toggleNewProjectForm()">+</button>
+        </div>
+        <div class="new-project-form" id="newProjectForm" style="display:none">
+          <input type="text" class="new-project-input" id="newProjectInput" placeholder="Project name…" maxlength="60">
+          <button class="sidebar-icon-btn" onclick="createProject()">✓</button>
+        </div>
+        <div id="projectsList"></div>
+      </div>
+
+      <!-- All Analyses (unassigned) -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span>All Analyses</span>
+        </div>
+        <div id="historyList"></div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+    <div class="analyzer-inner">
+
+      <div class="analyzer-header">
+        <h1 class="analyzer-title">Analyzer</h1>
+        <p class="analyzer-sub">Paste any error code, log snippet, CVE, or threat indicator.</p>
+      </div>
+
+      <!-- Category pills -->
+      <div class="cat-row" id="catRow">
+        <button class="cat-pill active" data-cat="auto">Auto-detect</button>
+        <button class="cat-pill" data-cat="http">HTTP</button>
+        <button class="cat-pill" data-cat="security">Security / CVE</button>
+        <button class="cat-pill" data-cat="os">OS / Kernel</button>
+        <button class="cat-pill" data-cat="runtime">Runtime</button>
+        <button class="cat-pill" data-cat="database">Database</button>
+        <button class="cat-pill" data-cat="network">Network</button>
+        <button class="cat-pill" data-cat="cloud">Cloud</button>
+        <button class="cat-pill" data-cat="mitre">MITRE ATT&amp;CK</button>
+      </div>
+
+      <!-- Input -->
+      <div class="input-wrap">
+        <div class="input-topbar">
+          <div class="input-topbar-dot d-red"></div>
+          <div class="input-topbar-dot d-yellow"></div>
+          <div class="input-topbar-dot d-green"></div>
+          <span class="input-topbar-label">error input</span>
+        </div>
+        <textarea id="errorInput" placeholder="e.g.  CVE-2021-44228
+ECONNREFUSED 127.0.0.1:5432
+TypeError: Cannot read properties of undefined
+ORA-00942: table or view does not exist
+KERNEL_SECURITY_CHECK_FAILURE
+[Errno 28] No space left on device"></textarea>
+        <div class="examples-row">
+          <span class="ex-label">Try:</span>
+          <button class="ex-chip" onclick="useExample('ECONNREFUSED 127.0.0.1:5432')">ECONNREFUSED</button>
+          <button class="ex-chip" onclick="useExample('CVE-2021-44228')">CVE-2021-44228</button>
+          <button class="ex-chip" onclick="useExample('ORA-00942: table or view does not exist')">ORA-00942</button>
+          <button class="ex-chip" onclick="useExample('KERNEL_SECURITY_CHECK_FAILURE (ffffffff81a2c3e0)')">BSOD</button>
+          <button class="ex-chip" onclick="useExample('HTTP 503 Service Unavailable\nRetry-After: 120')">HTTP 503</button>
+          <button class="ex-chip" onclick="useExample('TypeError: Cannot read properties of undefined (reading \'map\')\n    at App.render (App.js:42)')">TypeError</button>
+          <button class="ex-chip" onclick="useExample('[Errno 28] No space left on device')">[Errno 28]</button>
+          <button class="ex-chip" onclick="useExample('T1566.001')">T1566.001</button>
+        </div>
+      </div>
+
+      <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze →</button>
+
+      <!-- Loading -->
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>Analyzing with Claude...</span>
+      </div>
+
+      <!-- Result -->
+      <div class="result" id="result">
+        <div class="result-head">
+          <div class="result-title" id="rTitle">—</div>
+          <div class="result-head-right">
+            <span class="result-source" id="rSource"></span>
+            <div class="sev-badge" id="rSev">—</div>
+          </div>
+        </div>
+        <div class="result-body">
+          <div class="result-block full">
+            <div class="block-label">Explanation</div>
+            <div class="block-content" id="rExplanation">—</div>
+          </div>
+          <div class="result-block">
+            <div class="block-label">Likely cause</div>
+            <div class="cause-box" id="rCause">—</div>
+          </div>
+          <div class="result-block">
+            <div class="block-label">References</div>
+            <div class="refs-wrap" id="rRefs"></div>
+          </div>
+          <div class="result-block full">
+            <div class="block-label">Remediation steps</div>
+            <ol class="steps-list" id="rSteps"></ol>
+          </div>
+        </div>
+        <div class="raw-toggle" onclick="toggleRaw()">
+          <span id="rawIcon">▶</span> Raw response
+        </div>
+        <pre class="raw-pre" id="rawPre"></pre>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ── State ──
+let selectedCat = 'auto';
+let history = [];
+let projects = [];
+let activeHistoryId = null;
+let draggedId = null;
+let expandedProjects = new Set();
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  loadSidebar();
+
+  document.getElementById('newProjectInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createProject();
+    if (e.key === 'Escape') {
+      document.getElementById('newProjectForm').style.display = 'none';
+      document.getElementById('newProjectInput').value = '';
+    }
+  });
+});
+
+// ── Category pills ──
+document.getElementById('catRow').addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  selectedCat = pill.dataset.cat;
+});
+
+// ── Examples ──
+function useExample(text) {
+  document.getElementById('errorInput').value = text;
+  document.getElementById('errorInput').focus();
+}
+
+// ── Raw toggle ──
+function toggleRaw() {
+  const pre = document.getElementById('rawPre');
+  const icon = document.getElementById('rawIcon');
+  pre.classList.toggle('show');
+  icon.textContent = pre.classList.contains('show') ? '▼' : '▶';
+}
+
+// ── Severity helpers ──
+function sevClass(s) {
+  s = (s || '').toLowerCase();
+  if (s.includes('critical')) return 'sev-critical';
+  if (s.includes('high'))     return 'sev-high';
+  if (s.includes('medium'))   return 'sev-medium';
+  if (s.includes('low'))      return 'sev-low';
+  return 'sev-info';
+}
+
+// ── Render result ──
+function renderResult(data, source) {
+  document.getElementById('rTitle').textContent = data.error_title || 'Unknown Error';
+
+  const sev = document.getElementById('rSev');
+  sev.textContent = data.severity || 'Info';
+  sev.className = 'sev-badge ' + sevClass(data.severity);
+
+  document.getElementById('rExplanation').textContent = data.explanation || '—';
+  document.getElementById('rCause').textContent = data.likely_cause || '—';
+  document.getElementById('rSource').textContent = source || '';
+
+  const steps = Array.isArray(data.remediation_steps) ? data.remediation_steps : [];
+  document.getElementById('rSteps').innerHTML = steps.map((s, i) =>
+    `<li><div class="step-n">${i + 1}</div><span>${escHtml(s)}</span></li>`
+  ).join('') || '<li><div class="step-n">—</div><span>No steps available</span></li>';
+
+  const refs = Array.isArray(data.references) ? data.references : [];
+  document.getElementById('rRefs').innerHTML = refs.length
+    ? refs.map(r => `<div class="ref-tag">${escHtml(r)}</div>`).join('')
+    : '<span style="font-size:13px;color:var(--text-muted)">None found</span>';
+
+  document.getElementById('rawPre').textContent = JSON.stringify(data, null, 2);
+
+  // Reset raw toggle
+  document.getElementById('rawPre').classList.remove('show');
+  document.getElementById('rawIcon').textContent = '▶';
+
+  document.getElementById('result').classList.add('show');
+}
+
+// ── Analyze ──
+async function analyze() {
+  const input = document.getElementById('errorInput').value.trim();
+  if (!input) { document.getElementById('errorInput').focus(); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  const loading = document.getElementById('loading');
+
+  btn.disabled = true;
+  document.getElementById('result').classList.remove('show');
+  loading.classList.add('show');
+  setActiveHistory(null);
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input, category: selectedCat })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+
+    loading.classList.remove('show');
+    renderResult(data, 'New analysis');
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const saved = await saveAnalysis(input, selectedCat, data);
+    setActiveHistory(saved.id);
+
+  } catch (err) {
+    loading.classList.remove('show');
+    renderResult({
+      error_title: 'Analysis failed',
+      severity: 'Info',
+      explanation: err.message || 'Something went wrong. Please try again.',
+      likely_cause: 'Make sure the server is running and your .env contains a valid ANTHROPIC_API_KEY.',
+      remediation_steps: [
+        'Run: node server.js',
+        'Check that .env has ANTHROPIC_API_KEY set',
+        'Refresh the page and try again'
+      ],
+      references: []
+    });
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('errorInput').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+
+// ── Save analysis to history ──
+async function saveAnalysis(input, category, result) {
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    timestamp: new Date().toISOString(),
+    input,
+    category,
+    result,
+    projectId: null
+  };
+
+  const saved = await fetch('/api/history', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  }).then(r => r.json());
+
+  history.unshift(saved);
+  renderSidebar();
+  return saved;
+}
+
+// ── Load sidebar data ──
+async function loadSidebar() {
+  try {
+    [history, projects] = await Promise.all([
+      fetch('/api/history').then(r => r.json()),
+      fetch('/api/projects').then(r => r.json())
+    ]);
+  } catch {
+    history = [];
+    projects = [];
+  }
+  renderSidebar();
+}
+
+// ── Render sidebar ──
+function renderSidebar() {
+  renderProjectsList();
+  renderHistoryList();
+}
+
+function renderProjectsList() {
+  const el = document.getElementById('projectsList');
+  if (projects.length === 0) {
+    el.innerHTML = '<div class="sidebar-empty">No projects yet</div>';
+    return;
+  }
+  el.innerHTML = projects.map(p => {
+    const items = history.filter(h => h.projectId === p.id);
+    const isOpen = expandedProjects.has(p.id);
+    return `
+      <div class="project-row">
+        <button class="project-header-btn" id="proj-${p.id}"
+                ondragover="onDragOver(event,'${p.id}')"
+                ondrop="onDrop(event,'${p.id}')"
+                ondragleave="onDragLeave(event)"
+                onclick="toggleProject('${p.id}')">
+          <span class="project-arrow${isOpen ? ' open' : ''}">▶</span>
+          <span class="project-name">${escHtml(p.name)}</span>
+          <span class="project-count">${items.length}</span>
+        </button>
+        <div class="project-children${isOpen ? ' open' : ''}">
+          ${items.length
+            ? items.map(item => historyItemHTML(item)).join('')
+            : '<div class="sidebar-empty">Drop analyses here</div>'
+          }
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderHistoryList() {
+  const el = document.getElementById('historyList');
+  const unassigned = history.filter(h => !h.projectId);
+  if (unassigned.length === 0) {
+    el.innerHTML = '<div class="sidebar-empty">No analyses yet. Run one above.</div>';
+    return;
+  }
+  el.innerHTML = unassigned.map(item => historyItemHTML(item)).join('');
+}
+
+function historyItemHTML(item) {
+  const sc = sevClass(item.result?.severity);
+  const t = relativeTime(item.timestamp);
+  const snippet = item.input.length > 44 ? item.input.slice(0, 44) + '…' : item.input;
+  const isActive = item.id === activeHistoryId;
+  return `
+    <div class="history-item${isActive ? ' active' : ''}" id="hist-${item.id}"
+         draggable="true"
+         ondragstart="onDragStart(event,'${item.id}')"
+         ondragend="onDragEnd(event)"
+         onclick="loadHistoryItem('${item.id}')">
+      <div class="history-item-input">${escHtml(snippet)}</div>
+      <div class="history-item-meta">
+        <span class="hist-sev ${sc}">${escHtml(item.result?.severity || 'Info')}</span>
+        <span class="hist-time">${t}</span>
+      </div>
+    </div>`;
+}
+
+// ── Load a history item into the main view ──
+function loadHistoryItem(id) {
+  const item = history.find(h => h.id === id);
+  if (!item) return;
+  document.getElementById('errorInput').value = item.input;
+  renderResult(item.result, 'From history · ' + relativeTime(item.timestamp));
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setActiveHistory(id);
+}
+
+function setActiveHistory(id) {
+  activeHistoryId = id;
+  document.querySelectorAll('.history-item').forEach(el => {
+    el.classList.toggle('active', el.id === `hist-${id}`);
+  });
+}
+
+// ── Toggle project expand/collapse ──
+function toggleProject(id) {
+  if (expandedProjects.has(id)) {
+    expandedProjects.delete(id);
+  } else {
+    expandedProjects.add(id);
+  }
+  renderProjectsList();
+}
+
+// ── New project form ──
+function toggleNewProjectForm() {
+  const form = document.getElementById('newProjectForm');
+  const isVisible = form.style.display !== 'none';
+  form.style.display = isVisible ? 'none' : 'flex';
+  if (!isVisible) document.getElementById('newProjectInput').focus();
+}
+
+async function createProject() {
+  const input = document.getElementById('newProjectInput');
+  const name = input.value.trim();
+  if (!name) return;
+
+  const project = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    name,
+    createdAt: new Date().toISOString()
+  };
+
+  await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(project)
+  });
+
+  input.value = '';
+  document.getElementById('newProjectForm').style.display = 'none';
+  projects.push(project);
+  expandedProjects.add(project.id);
+  renderSidebar();
+}
+
+// ── Drag and drop ──
+function onDragStart(e, id) {
+  draggedId = id;
+  // defer so the drag image captures the non-faded state
+  setTimeout(() => document.getElementById(`hist-${id}`)?.classList.add('dragging'), 0);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd() {
+  if (draggedId) document.getElementById(`hist-${draggedId}`)?.classList.remove('dragging');
+}
+
+function onDragOver(e, projectId) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById(`proj-${projectId}`)?.classList.add('drop-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drop-over');
+}
+
+async function onDrop(e, projectId) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById(`proj-${projectId}`)?.classList.remove('drop-over');
+  if (!draggedId) return;
+
+  const item = history.find(h => h.id === draggedId);
+  if (item && item.projectId !== projectId) {
+    item.projectId = projectId;
+    await fetch(`/api/history/${draggedId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId })
+    });
+    expandedProjects.add(projectId);
+    renderSidebar();
+  }
+  draggedId = null;
+}
+
+// ── Helpers ──
+function relativeTime(ts) {
+  const diff = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

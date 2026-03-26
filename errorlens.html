@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ErrorLens — AI Error & Threat Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --off-white: #f7f6f3;
+  --light: #eeecea;
+  --border: #e2e0db;
+  --border-dark: #ccc9c3;
+  --text: #1a1916;
+  --text-mid: #5a5752;
+  --text-muted: #9a9690;
+  --accent: #1a1916;
+  --accent-light: #f0ede8;
+  --red: #c0392b;
+  --red-bg: #fdf2f1;
+  --orange: #c75b1a;
+  --orange-bg: #fdf4ee;
+  --yellow: #9a7a0a;
+  --yellow-bg: #fdfaee;
+  --green: #1a7a4a;
+  --green-bg: #f0faf4;
+  --blue: #1a5fa0;
+  --blue-bg: #f0f6fd;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --radius: 12px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--white);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+
+.nav-logo {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-logo-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--text);
+  border-radius: 50%;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-mid);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-cta {
+  background: var(--text) !important;
+  color: var(--white) !important;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  transition: opacity 0.15s !important;
+}
+.nav-cta:hover { opacity: 0.8; }
+
+/* ── HERO ── */
+.hero {
+  padding: 100px 40px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--light);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 14px;
+  margin-bottom: 28px;
+}
+
+.hero-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 5vw, 62px);
+  line-height: 1.08;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-bottom: 24px;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--text-mid);
+}
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-mid);
+  font-weight: 300;
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 420px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-primary {
+  background: var(--text);
+  color: var(--white);
+  padding: 13px 28px;
+  border-radius: 100px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  display: inline-block;
+}
+.btn-primary:hover { opacity: 0.8; }
+
+.hero-note {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Hero visual — error type grid */
+.hero-visual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hero-card {
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.hero-card:hover { border-color: var(--border-dark); transform: translateY(-2px); }
+
+.hero-card-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.hero-card-code {
+  font-family: 'DM Sans', monospace;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-card-sev {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 100px;
+  display: inline-block;
+}
+
+.sev-critical { background: var(--red-bg); color: var(--red); }
+.sev-high     { background: var(--orange-bg); color: var(--orange); }
+.sev-medium   { background: var(--yellow-bg); color: var(--yellow); }
+.sev-low      { background: var(--green-bg); color: var(--green); }
+.sev-info     { background: var(--blue-bg); color: var(--blue); }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 64px;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: var(--serif);
+  font-size: 32px;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border-dark);
+}
+
+/* ── HOW IT WORKS ── */
+.section {
+  padding: 96px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3.5vw, 44px);
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.section-sub {
+  font-size: 16px;
+  color: var(--text-mid);
+  font-weight: 300;
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 56px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.step {
+  background: var(--white);
+  padding: 36px 32px;
+  border-right: 1px solid var(--border);
+}
+.step:last-child { border-right: none; }
+
+.step-num {
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.step h3 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.step p {
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+/* ── FEATURES ── */
+.features-section {
+  padding: 0 40px 96px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.features-header {
+  margin-bottom: 56px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.feature-card:hover {
+  border-color: var(--border-dark);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+}
+
+.feature-icon {
+  font-size: 22px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.feature-card h3 {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.feature-card p {
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+/* ── TOOL SECTION ── */
+.tool-section {
+  background: var(--off-white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 96px 40px;
+}
+
+.tool-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.tool-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.tool-header h2 { margin-bottom: 12px; }
+.tool-header .section-sub { margin: 0 auto; text-align: center; }
+
+/* Category pills */
+.cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cat-pill {
+  padding: 6px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border-dark);
+  background: var(--white);
+  color: var(--text-mid);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-pill:hover { border-color: var(--text); color: var(--text); }
+.cat-pill.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--white);
+}
+
+/* Input area */
+.input-wrap {
+  background: var(--white);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-wrap:focus-within {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px rgba(26,25,22,0.06);
+}
+
+.input-topbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-topbar-dot { width: 10px; height: 10px; border-radius: 50%; }
+.d-red { background: #ff5f57; }
+.d-yellow { background: #febc2e; }
+.d-green { background: #28c840; }
+
+.input-topbar-label {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: 'DM Sans', monospace;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.7;
+}
+textarea::placeholder { color: var(--text-muted); }
+
+.examples-row {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.ex-label { font-size: 11px; color: var(--text-muted); }
+
+.ex-chip {
+  padding: 3px 10px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text-mid);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ex-chip:hover { border-color: var(--border-dark); color: var(--text); }
+
+.analyze-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--text);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.01em;
+}
+.analyze-btn:hover { opacity: 0.85; }
+.analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Loading */
+.loading {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.loading.show { display: flex; }
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-dark);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Result card */
+.result {
+  display: none;
+  background: var(--white);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 20px;
+  animation: rise 0.25s ease;
+}
+.result.show { display: block; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+}
+
+.result-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--text);
+}
+
+.sev-badge {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.result-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.result-block { display: flex; flex-direction: column; gap: 8px; }
+.result-block.full { grid-column: 1 / -1; }
+
+.block-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.block-content {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.cause-box {
+  background: var(--off-white);
+  border-left: 3px solid var(--border-dark);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.steps-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  font-weight: 300;
+}
+.step-n {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--off-white);
+  border: 1px solid var(--border-dark);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.refs-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.ref-tag {
+  padding: 4px 10px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.raw-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+.raw-toggle:hover { color: var(--text); }
+
+.raw-pre {
+  display: none;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--off-white);
+}
+.raw-pre.show { display: block; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-logo {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--text);
+}
+
+.footer-note {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── ANIMATIONS ── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; gap: 48px; padding: 60px 24px; }
+  .hero-visual { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .step { border-right: none; border-bottom: 1px solid var(--border); }
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-bar { gap: 32px; flex-wrap: wrap; padding: 24px; }
+  .result-body { grid-template-columns: 1fr; }
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .section, .features-section { padding: 64px 24px; }
+  .tool-section { padding: 64px 24px; }
+  footer { padding: 32px 24px; flex-direction: column; gap: 12px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-dot"></div>
+    ErrorLens
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="/analyzer">Analyzer</a></li>
+    <li><a href="/analyzer" class="nav-cta">Try it free</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      Powered by Claude AI
+    </div>
+    <h1>Decode any error,<br><em>instantly.</em></h1>
+    <p class="hero-sub">Paste any error code, log snippet, CVE, or threat indicator. Get a plain-English explanation, severity rating, and step-by-step fix in seconds.</p>
+    <div class="hero-actions">
+      <a href="/analyzer" class="btn-primary">Open Analyzer →</a>
+      <a href="#tool" class="hero-note" style="text-decoration:none">Try embedded tool ↓</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card">
+      <div class="hero-card-label">Security</div>
+      <div class="hero-card-code">CVE-2021-44228</div>
+      <span class="hero-card-sev sev-critical">Critical</span>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-label">Database</div>
+      <div class="hero-card-code">ORA-00942</div>
+      <span class="hero-card-sev sev-medium">Medium</span>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-label">Network</div>
+      <div class="hero-card-code">ECONNREFUSED</div>
+      <span class="hero-card-sev sev-high">High</span>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-label">Runtime</div>
+      <div class="hero-card-code">TypeError: undefined</div>
+      <span class="hero-card-sev sev-low">Low</span>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-label">OS / Kernel</div>
+      <div class="hero-card-code">KERNEL_SECURITY_CHECK</div>
+      <span class="hero-card-sev sev-critical">Critical</span>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-label">MITRE ATT&amp;CK</div>
+      <div class="hero-card-code">T1566.001</div>
+      <span class="hero-card-sev sev-high">High</span>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">10+</div>
+    <div class="stat-label">Error categories</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num">5</div>
+    <div class="stat-label">Severity levels</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num">&lt;3s</div>
+    <div class="stat-label">Average response</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <div class="stat-num">Free</div>
+    <div class="stat-label">To use</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-eyebrow">How it works</div>
+  <h2>From cryptic code<br>to clear action</h2>
+  <p class="section-sub">Three steps from confusion to resolution. No documentation digging required.</p>
+
+  <div class="steps fade-up">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">⌨️</div>
+      <h3>Paste your error</h3>
+      <p>Drop in anything — an error code, stack trace, CVE ID, log line, or MITRE technique. ErrorLens auto-detects the type.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">🧠</div>
+      <h3>Claude analyzes it</h3>
+      <p>The Anthropic Claude API processes your input against a deep knowledge base of errors, vulnerabilities, and system codes.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">✓</div>
+      <h3>Get your answer</h3>
+      <p>Receive a plain-English explanation, severity rating, root cause, numbered remediation steps, and relevant references.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="features-header fade-up">
+    <div class="section-eyebrow">Features</div>
+    <h2>Everything you need<br>to understand any error</h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up">
+      <span class="feature-icon">🔍</span>
+      <h3>Universal coverage</h3>
+      <p>HTTP, OS, runtime, database, network, cloud, security, MITRE ATT&CK, and more. If it's an error, ErrorLens knows it.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <span class="feature-icon">⚡</span>
+      <h3>Instant severity scoring</h3>
+      <p>Every result is rated Critical, High, Medium, Low, or Info — so you know immediately what to prioritize.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <span class="feature-icon">🛠</span>
+      <h3>Actionable fixes</h3>
+      <p>Not just "what went wrong" but "here's exactly how to fix it." Numbered steps you can follow immediately.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <span class="feature-icon">📎</span>
+      <h3>References included</h3>
+      <p>CVE IDs, OWASP links, RFCs, and vendor documentation are cited with every result.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <span class="feature-icon">🤖</span>
+      <h3>Claude-powered</h3>
+      <p>Built on Anthropic's Claude — one of the most capable AI models available — for accurate, nuanced analysis.</p>
+    </div>
+    <div class="feature-card fade-up">
+      <span class="feature-icon">🔓</span>
+      <h3>No account needed</h3>
+      <p>Open the page, paste your error, get your answer. No sign-up, no rate limits, no friction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL -->
+<section class="tool-section" id="tool">
+  <div class="tool-inner">
+    <div class="tool-header fade-up">
+      <div class="section-eyebrow">The analyzer</div>
+      <h2>Try it now</h2>
+      <p class="section-sub">Paste any error code, log snippet, or threat indicator below.</p>
+    </div>
+
+    <!-- Category pills -->
+    <div class="cat-row" id="catRow">
+      <button class="cat-pill active" data-cat="auto">Auto-detect</button>
+      <button class="cat-pill" data-cat="http">HTTP</button>
+      <button class="cat-pill" data-cat="security">Security / CVE</button>
+      <button class="cat-pill" data-cat="os">OS / Kernel</button>
+      <button class="cat-pill" data-cat="runtime">Runtime</button>
+      <button class="cat-pill" data-cat="database">Database</button>
+      <button class="cat-pill" data-cat="network">Network</button>
+      <button class="cat-pill" data-cat="cloud">Cloud</button>
+      <button class="cat-pill" data-cat="mitre">MITRE ATT&CK</button>
+    </div>
+
+    <!-- Input -->
+    <div class="input-wrap">
+      <div class="input-topbar">
+        <div class="input-topbar-dot d-red"></div>
+        <div class="input-topbar-dot d-yellow"></div>
+        <div class="input-topbar-dot d-green"></div>
+        <span class="input-topbar-label">error input</span>
+      </div>
+      <textarea id="errorInput" placeholder="e.g.  CVE-2021-44228
+ECONNREFUSED 127.0.0.1:5432
+TypeError: Cannot read properties of undefined
+ORA-00942: table or view does not exist
+KERNEL_SECURITY_CHECK_FAILURE
+[Errno 28] No space left on device"></textarea>
+      <div class="examples-row">
+        <span class="ex-label">Try:</span>
+        <button class="ex-chip" onclick="useExample('ECONNREFUSED 127.0.0.1:5432')">ECONNREFUSED</button>
+        <button class="ex-chip" onclick="useExample('CVE-2021-44228')">CVE-2021-44228</button>
+        <button class="ex-chip" onclick="useExample('ORA-00942: table or view does not exist')">ORA-00942</button>
+        <button class="ex-chip" onclick="useExample('KERNEL_SECURITY_CHECK_FAILURE (ffffffff81a2c3e0)')">BSOD</button>
+        <button class="ex-chip" onclick="useExample('HTTP 503 Service Unavailable\nRetry-After: 120')">HTTP 503</button>
+        <button class="ex-chip" onclick="useExample('TypeError: Cannot read properties of undefined (reading \'map\')\n    at App.render (App.js:42)')">TypeError</button>
+        <button class="ex-chip" onclick="useExample('[Errno 28] No space left on device')">[Errno 28]</button>
+        <button class="ex-chip" onclick="useExample('T1566.001')">T1566.001</button>
+      </div>
+    </div>
+
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze →</button>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>Analyzing with Claude...</span>
+    </div>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="result-head">
+        <div class="result-title" id="rTitle">—</div>
+        <div class="sev-badge" id="rSev">—</div>
+      </div>
+      <div class="result-body">
+        <div class="result-block full">
+          <div class="block-label">Explanation</div>
+          <div class="block-content" id="rExplanation">—</div>
+        </div>
+        <div class="result-block">
+          <div class="block-label">Likely cause</div>
+          <div class="cause-box" id="rCause">—</div>
+        </div>
+        <div class="result-block">
+          <div class="block-label">References</div>
+          <div class="refs-wrap" id="rRefs"></div>
+        </div>
+        <div class="result-block full">
+          <div class="block-label">Remediation steps</div>
+          <ol class="steps-list" id="rSteps"></ol>
+        </div>
+      </div>
+      <div class="raw-toggle" onclick="toggleRaw()">
+        <span id="rawIcon">▶</span> Raw response
+      </div>
+      <pre class="raw-pre" id="rawPre"></pre>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ErrorLens</div>
+  <div class="footer-note">Built with the Anthropic Claude API · MIT License</div>
+</footer>
+
+<script>
+// ── Category selection ──
+let selectedCat = 'auto';
+document.getElementById('catRow').addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  selectedCat = pill.dataset.cat;
+});
+
+function useExample(text) {
+  document.getElementById('errorInput').value = text;
+  document.getElementById('errorInput').focus();
+}
+
+function toggleRaw() {
+  const pre = document.getElementById('rawPre');
+  const icon = document.getElementById('rawIcon');
+  pre.classList.toggle('show');
+  icon.textContent = pre.classList.contains('show') ? '▼' : '▶';
+}
+
+function sevClass(s) {
+  s = (s||'').toLowerCase();
+  if (s.includes('critical')) return 'sev-critical';
+  if (s.includes('high'))     return 'sev-high';
+  if (s.includes('medium'))   return 'sev-medium';
+  if (s.includes('low'))      return 'sev-low';
+  return 'sev-info';
+}
+
+function renderResult(data) {
+  document.getElementById('rTitle').textContent = data.error_title || 'Unknown Error';
+  const sev = document.getElementById('rSev');
+  sev.textContent = data.severity || 'Info';
+  sev.className = 'sev-badge ' + sevClass(data.severity);
+  document.getElementById('rExplanation').textContent = data.explanation || '—';
+  document.getElementById('rCause').textContent = data.likely_cause || '—';
+
+  const steps = Array.isArray(data.remediation_steps) ? data.remediation_steps : [];
+  document.getElementById('rSteps').innerHTML = steps.map((s, i) =>
+    `<li><div class="step-n">${i+1}</div><span>${s}</span></li>`
+  ).join('') || '<li><div class="step-n">—</div><span>No steps available</span></li>';
+
+  const refs = Array.isArray(data.references) ? data.references : [];
+  document.getElementById('rRefs').innerHTML = refs.length
+    ? refs.map(r => `<div class="ref-tag">${r}</div>`).join('')
+    : '<span style="font-size:13px;color:var(--text-muted)">None found</span>';
+
+  document.getElementById('rawPre').textContent = JSON.stringify(data, null, 2);
+  document.getElementById('result').classList.add('show');
+}
+
+async function analyze() {
+  const input = document.getElementById('errorInput').value.trim();
+  if (!input) { document.getElementById('errorInput').focus(); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  const loading = document.getElementById('loading');
+  const result = document.getElementById('result');
+
+  btn.disabled = true;
+  result.classList.remove('show');
+  loading.classList.add('show');
+
+  try {
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ input, category: selectedCat })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+
+    loading.classList.remove('show');
+    renderResult(data);
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (err) {
+    loading.classList.remove('show');
+    renderResult({
+      error_title: 'Analysis failed',
+      severity: 'Info',
+      explanation: err.message || 'Something went wrong. Please try again.',
+      likely_cause: 'Make sure the server is running and your .env contains a valid ANTHROPIC_API_KEY.',
+      remediation_steps: ['Run: node server.js', 'Check that .env has ANTHROPIC_API_KEY set', 'Refresh the page and try again'],
+      references: []
+    });
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('errorInput').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+
+// ── Scroll-triggered fade-up ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
